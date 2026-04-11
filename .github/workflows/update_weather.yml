@@ -1,25 +1,40 @@
 name: Daily Weather Generator
 
 on:
-  workflow_dispatch:
+  schedule:
+    # يعمل تلقائياً كل يوم الساعة 12:00 منتصف الليل بتوقيت جرينتش
+    - cron: '0 0 * * *'
+  workflow_dispatch: # يترك لك زر التشغيل اليدوي للتجربة
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    # إعطاء السيرفر صلاحية الكتابة في مستودعك (مهم جداً)
+    permissions:
+      contents: write
+
     steps:
       - name: 📥 تحميل المشروع
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 🟢 تشغيل Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: 📦 تثبيت المكتبات
         run: npm install
 
-      - name: ▶️ تشغيل السكربت
+      - name: ▶️ تشغيل السكربت لتوليد النشرة
         run: node generate_weather.js
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: 💾 حفظ ورفع الملف إلى المستودع
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add weather_data.json
+          # إذا لم يوجد تغيير في البيانات، لن يقوم بالرفع لتجنب الأخطاء
+          git diff --quiet && git diff --staged --quiet || (git commit -m "تحديث النشرة الجوية اليومية" && git push)
