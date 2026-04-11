@@ -1,11 +1,9 @@
 name: Daily Weather Generator
 
-# متى يعمل الكود؟
 on:
   schedule:
-    # يعمل كل يوم الساعة 00:00 بتوقيت UTC
     - cron: '0 0 * * *'
-  workflow_dispatch: # يسمح لك بتشغيله يدوياً من جيتهوب للتجربة
+  workflow_dispatch: 
 
 jobs:
   build:
@@ -13,18 +11,20 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      # تحديث إلى النسخة الرابعة
+      uses: actions/checkout@v4
 
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      # تحديث إلى النسخة الرابعة
+      uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        # تحديث المحرك إلى النسخة 24 الحديثة
+        node-version: '24'
 
     - name: Install Dependencies
       run: npm install
 
     - name: Run Weather Generator Script
-      # نمرر مفتاحك بشكل آمن من إعدادات جيتهوب
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: node generate_weather.js
@@ -34,5 +34,4 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add weather_data.json
-        # إذا كان هناك تغيير، قم بحفظه ورفعه
         git diff --quiet && git diff --staged --quiet || (git commit -m "تحديث النشرة الجوية اليومية" && git push)
