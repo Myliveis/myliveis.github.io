@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@google/generative-ai": "latest"
+    "@google/genai": "^0.3.0"
   }
 }
