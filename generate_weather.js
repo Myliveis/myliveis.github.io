@@ -51,7 +51,7 @@ async function generateWeather() {
 
     // ✅ الطريقة الجديدة الصحيحة
     const response = await ai.models.generateContent({
-      model:  "gemini-pr0",
+      model:  "gemini-pro",
       contents: prompt,
     });
 
