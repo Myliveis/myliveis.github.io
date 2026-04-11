@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import fs from "fs";
 
 // 🔐 جلب المفتاح من GitHub Secrets
@@ -22,7 +22,7 @@ const countries = [
 async function generateWeather() {
   // ✅ استخدام النموذج الصحيح
   const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+   model: "gemini-2.0-flash"
   });
 
   const prompt = `
