@@ -1,17 +1,13 @@
-import { GoogleGenAI } from "@google/genai";
 import fs from "fs";
 
-// 🔐 جلب المفتاح من GitHub Secrets
+// 🔐 جلب المفتاح
 const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
-  throw new Error("❌ GEMINI_API_KEY غير موجود! تأكد من إضافته في GitHub Secrets.");
+  console.error("❌ المفتاح غير موجود!");
+  process.exit(1);
 }
 
-// ✅ إنشاء الكائن الصحيح
-const ai = new GoogleGenAI({ apiKey });
-
-// 🌍 قائمة الدول
 const countries = [
   "سوريا (SY)", "لبنان (LB)", "فلسطين (PS)", "الأردن (JO)", "العراق (IQ)",
   "مصر (EG)", "السعودية (SA)", "الكويت (KW)", "الإمارات (AE)", "قطر (QA)",
@@ -21,66 +17,46 @@ const countries = [
 ];
 
 async function generateWeather() {
+  const prompt = `أنت خبير أرصاد جوية. قم بتوليد نشرة جوية قصيرة باللغة العربية لـ 22 دولة لمدة 3 أيام (اليوم، غداً، بعد غد).
+الدول: ${countries.join(", ")}.
+المخرج يجب أن يكون Valid JSON فقط باستخدام رموز ISO كمفاتيح، بهذا الشكل:
+{"SY": {"today": "...", "tomorrow": "...", "after_tomorrow": "..."}}`;
 
-  const prompt = `
-أنت خبير أرصاد جوية. قم بتوليد نشرة جوية قصيرة ومختصرة باللغة العربية لـ 22 دولة عربية لمدة 3 أيام (اليوم، غداً، بعد غد).
-
-الدول هي: ${countries.join(", ")}.
-
-يجب أن يكون المخرج بصيغة JSON صحيحة فقط (Valid JSON) بدون أي نص إضافي أو Markdown.
-
-الشكل المطلوب:
-{
-  "SY": {
-    "today": "نشرة اليوم...",
-    "tomorrow": "نشرة الغد...",
-    "after_tomorrow": "نشرة بعد غد..."
-  },
-  "LB": {
-    "today": "...",
-    "tomorrow": "...",
-    "after_tomorrow": "..."
-  }
-}
-
-استخدم رموز الدول ISO كمفاتيح. لا تضف أي نص خارج JSON.
-`;
+  // الرابط المباشر والصريح لسيرفر جوجل (لا يمكن أن يخطئ)
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
   try {
-    console.log("🌤️ جاري الاتصال بـ Gemini لتوليد 66 نشرة جوية...");
+    console.log("🌤️ جاري الاتصال بـ Gemini عبر الاتصال المباشر (بدون مكتبات)...");
 
-    // ✅ الطريقة الجديدة الصحيحة
-    const response = await ai.models.generateContent({
-      model:  "gemini-pro",
-      contents: prompt,
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
     });
 
-    let responseText = response.text;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`خطأ من السيرفر: ${response.status} - ${errorText}`);
+    }
 
-    // 🔧 تنظيف احتياطي
-    responseText = responseText
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
+    const data = await response.json();
+    let responseText = data.candidates[0].content.parts[0].text;
 
-    // ✅ تحويل إلى JSON
+    // تنظيف النص
+    responseText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+    
+    // تحويل وحفظ
     const weatherData = JSON.parse(responseText);
-
-    // 💾 حفظ الملف
-    fs.writeFileSync(
-      "weather_data.json",
-      JSON.stringify(weatherData, null, 2),
-      "utf-8"
-    );
-
-    console.log("✅ تم تحديث ملف weather_data.json بنجاح!");
+    fs.writeFileSync("weather_data.json", JSON.stringify(weatherData, null, 2), "utf-8");
+    
+    console.log("✅ تم سحب البيانات وحفظ الملف بنجاح ساحق!");
 
   } catch (error) {
-    console.error("❌ حدث خطأ أثناء التوليد:");
-    console.error(error);
+    console.error("❌ فشل الاتصال المباشر:", error.message);
     process.exit(1);
   }
 }
 
-// 🚀 تشغيل العملية
 generateWeather();
