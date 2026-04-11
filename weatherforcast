@@ -1,0 +1,73 @@
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const fs = require('fs');
+
+// 1. ضع مفتاح API الخاص بك هنا
+const API_KEY = "AIzaSyAmECsr6RbuzKSTVZ3x67t2x1oKA1fPW5g";
+const genAI = new GoogleGenerativeAI(API_KEY);
+
+// 2. قائمة الـ 22 دولة عربية
+const countries = [
+    { name: "سوريا", code: "SY" }, { name: "لبنان", code: "LB" }, 
+    { name: "فلسطين", code: "PS" }, { name: "مصر", code: "EG" },
+    { name: "السعودية", code: "SA" }, { name: "الأردن", code: "JO" },
+    { name: "العراق", code: "IQ" }, { name: "الإمارات", code: "AE" },
+    { name: "الكويت", code: "KW" }, { name: "قطر", code: "QA" },
+    { name: "عُمان", code: "OM" }, { name: "البحرين", code: "BH" },
+    { name: "اليمن", code: "YE" }, { name: "السودان", code: "SD" },
+    { name: "ليبيا", code: "LY" }, { name: "تونس", code: "TN" },
+    { name: "الجزائر", code: "DZ" }, { name: "المغرب", code: "MA" },
+    { name: "موريتانيا", code: "MR" }, { name: "جيبوتي", code: "DJ" },
+    { name: "الصومال", code: "SO" }, { name: "جزر القمر", code: "KM" }
+];
+
+async function generateWeatherData() {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    let fullData = {
+        metadata: {
+            last_updated: new Date().toISOString().split('T')[0],
+            author: "WeatherToday AI"
+        },
+        countries: []
+    };
+
+    console.log("جاري البدء في توليد النشرات الـ 66...");
+
+    for (const country of countries) {
+        console.log(`جاري العمل على: ${country.name}...`);
+        
+        let countryForecast = {
+            isoCode: country.code,
+            name: country.name,
+            forecast: []
+        };
+
+        // طلب 3 نشرات في طلب واحد لتوفير الوقت والمال
+        const prompt = `أنت خبير أرصاد. قدم 3 نشرات جوية منفصلة ومختصرة بالعربية لدولة ${country.name} 
+        ليوم (اليوم، غداً، بعد غد). اجعلها جذابة.
+        رد بصيغة JSON فقط كقائمة نصوص كالتالي: ["نشرة 1", "نشرة 2", "نشرة 3"]`;
+
+        try {
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+            
+            // تنظيف النص وتحويله لـ Array
+            const cleanJson = text.replace(/```json|```/g, "").trim();
+            const summaries = JSON.parse(cleanJson);
+
+            summaries.forEach((msg, index) => {
+                countryForecast.forecast.push({ day: index, summary: msg });
+            });
+
+            fullData.countries.push(countryForecast);
+        } catch (error) {
+            console.error(`خطأ في دولة ${country.name}:`, error.message);
+        }
+    }
+
+    // 3. حفظ النتيجة في ملف
+    fs.writeFileSync('weather_data.json', JSON.stringify(fullData, null, 2), 'utf-8');
+    console.log("تم بنجاح! ملف weather_data.json جاهز للنشر.");
+}
+
+generateWeatherData();
