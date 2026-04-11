@@ -8,7 +8,8 @@ if (!apiKey) {
   throw new Error("❌ GEMINI_API_KEY غير موجود! تأكد من إضافته في GitHub Secrets.");
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
+// ✅ إنشاء الكائن الصحيح
+const ai = new GoogleGenAI({ apiKey });
 
 // 🌍 قائمة الدول
 const countries = [
@@ -20,10 +21,6 @@ const countries = [
 ];
 
 async function generateWeather() {
-  // ✅ استخدام النموذج الصحيح
-  const model = genAI.getGenerativeModel({
-   model: "gemini-2.0-flash"
-  });
 
   const prompt = `
 أنت خبير أرصاد جوية. قم بتوليد نشرة جوية قصيرة ومختصرة باللغة العربية لـ 22 دولة عربية لمدة 3 أيام (اليوم، غداً، بعد غد).
@@ -52,23 +49,21 @@ async function generateWeather() {
   try {
     console.log("🌤️ جاري الاتصال بـ Gemini لتوليد 66 نشرة جوية...");
 
-    // ✅ طلب مع فرض JSON
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-      },
+    // ✅ الطريقة الجديدة الصحيحة
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: prompt,
     });
 
-    let responseText = result.response.text();
+    let responseText = response.text;
 
-    // 🔧 تنظيف احتياطي (في حال أضاف أي رموز)
+    // 🔧 تنظيف احتياطي
     responseText = responseText
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
 
-    // ✅ التحقق من JSON
+    // ✅ تحويل إلى JSON
     const weatherData = JSON.parse(responseText);
 
     // 💾 حفظ الملف
@@ -83,12 +78,6 @@ async function generateWeather() {
   } catch (error) {
     console.error("❌ حدث خطأ أثناء التوليد:");
     console.error(error);
-
-    // 🧠 طباعة إضافية للتشخيص
-    if (error.response) {
-      console.error("📄 تفاصيل الاستجابة:", error.response);
-    }
-
     process.exit(1);
   }
 }
