@@ -1,8 +1,5 @@
 {
   "name": "weather-generator",
   "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-    "@google/genai": "^0.3.0"
-  }
+  "type": "module"
 }
