@@ -1,37 +1,25 @@
 name: Daily Weather Generator
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      # تحديث إلى النسخة الرابعة
-      uses: actions/checkout@v4
+      - name: 📥 تحميل المشروع
+        uses: actions/checkout@v3
 
-    - name: Setup Node.js
-      # تحديث إلى النسخة الرابعة
-      uses: actions/setup-node@v4
-      with:
-        # تحديث المحرك إلى النسخة 24 الحديثة
-        node-version: '24'
+      - name: 🟢 تشغيل Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-    - name: Install Dependencies
-      run: npm install
+      - name: 📦 تثبيت المكتبات
+        run: npm install
 
-    - name: Run Weather Generator Script
-      env:
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      run: node generate_weather.js
-
-    - name: Commit and Push changes
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add weather_data.json
-        git diff --quiet && git diff --staged --quiet || (git commit -m "تحديث النشرة الجوية اليومية" && git push)
+      - name: ▶️ تشغيل السكربت
+        run: node generate_weather.js
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
