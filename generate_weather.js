@@ -14,7 +14,7 @@ const countries = [
 ];
 
 async function generateWeather() {
-   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+   const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
     أنت خبير أرصاد جوية. قم بتوليد نشرة جوية قصيرة ومختصرة باللغة العربية لـ 22 دولة عربية لمدة 3 أيام (اليوم، غداً، بعد غد).
