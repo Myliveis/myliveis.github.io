@@ -23,7 +23,7 @@ async function generateWeather() {
 {"SY": {"today": "...", "tomorrow": "...", "after_tomorrow": "..."}}`;
 
   // الرابط المباشر والصريح لسيرفر جوجل (لا يمكن أن يخطئ)
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
   try {
     console.log("🌤️ جاري الاتصال بـ Gemini عبر الاتصال المباشر (بدون مكتبات)...");
